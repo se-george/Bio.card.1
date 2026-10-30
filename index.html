@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>بطاقات الإنقاذ للمقالي - Biochemistry Midterm</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'Cairo', 'Tahoma', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Cairo', 'Inter', sans-serif;
+        }
+        .en-text {
+            font-family: 'Inter', sans-serif;
+            direction: ltr;
+            text-align: left;
+        }
+        /* 3D Flip Card Styles */
+        .perspective-1000 {
+            perspective: 1000px;
+        }
+        .transform-style-3d {
+            transform-style: preserve-3d;
+            transition: transform 0.55s cubic-bezier(0.4, 0.2, 0.2, 1);
+        }
+        .backface-hidden {
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
+        }
+        .rotate-y-180 {
+            transform: rotateY(180deg);
+        }
+        .card-flipped .transform-style-3d {
+            transform: rotateY(180deg);
+        }
+        /* Custom Scrollbar for Card Back */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(15, 23, 42, 0.3);
+            border-radius: 8px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(99, 102, 241, 0.5);
+            border-radius: 8px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(99, 102, 241, 0.8);
+        }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col selection:bg-indigo-500 selection:text-white transition-colors duration-300">
+
+    <!-- Top Sticky Header & Progress Bar -->
+    <header class="sticky top-0 z-30 bg-slate-900/90 backdrop-blur-md border-b border-slate-800 shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-3">
+            <!-- Title -->
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-emerald-500 flex items-center justify-center text-white font-bold text-xl shadow-md">
+                    ⚡
+                </div>
+                <div>
+                    <h1 class="text-lg md:text-xl font-extrabold bg-gradient-to-r from-white via-indigo-200 to-emerald-300 bg-clip-text text-transparent">
+                        بطاقات الإنقاذ: الـ 11 سؤال مقالي (75%)
+                    </h1>
+                    <p class="text-xs text-slate-400">اضغط على البطاقة لقلبها ورؤية الإجابة المختصرة النهائية</p>
+                </div>
+            </div>
+
+            <!-- Controls & Mode Toggle -->
+            <div class="flex items-center gap-2 flex-wrap">
+                <!-- View Mode Toggle -->
+                <div class="bg-slate-800 p-1 rounded-xl flex items-center border border-slate-700">
+                    <button id="btnGridMode" onclick="setViewMode('grid')" class="px-3 py-1.5 rounded-lg text-xs md:text-sm font-bold transition-all bg-indigo-600 text-white shadow">
+                        عرض الشبكة (كل الكروت)
+                    </button>
+                    <button id="btnSingleMode" onclick="setViewMode('single')" class="px-3 py-1.5 rounded-lg text-xs md:text-sm font-bold transition-all text-slate-300 hover:text-white">
+                        تركيز (كارت بكارت)
+                    </button>
+                </div>
+
+                <!-- Flip All Button -->
+                <button onclick="flipAllCards()" class="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs md:text-sm font-semibold text-indigo-300 transition flex items-center gap-1.5">
+                    <span>🔄</span>
+                    <span id="flipAllText">قلب الكل للإجابة</span>
+                </button>
+
+                <!-- Filter Unlearned -->
+                <button id="btnFilterUnlearned" onclick="toggleFilterUnlearned()" class="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs md:text-sm font-semibold text-amber-300 transition flex items-center gap-1.5">
+                    <span>🎯</span>
+                    <span id="filterText">عرض غير المحفوظ فقط</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Progress Bar Section -->
+        <div class="bg-slate-900/60 border-t border-slate-800/80 px-4 py-2">
+            <div class="max-w-7xl mx-auto flex items-center gap-4">
+                <div class="flex items-center gap-2 text-xs md:text-sm font-bold text-emerald-400 shrink-0">
+                    <span>تم الحفظ:</span>
+                    <span id="progressCount" class="px-2 py-0.5 bg-emerald-500/20 border border-emerald-500/40 rounded-md">0 / 11</span>
+                </div>
+                <div class="w-full bg-slate-800 h-2.5 rounded-full overflow-hidden p-0.5 border border-slate-700">
+                    <div id="progressBar" class="bg-gradient-to-r from-indigo-500 to-emerald-400 h-full rounded-full transition-all duration-500" style="width: 0%"></div>
+                </div>
+                <button onclick="resetProgress()" class="text-xs text-slate-400 hover:text-rose-400 shrink-0 transition" title="إعادة ضبط التقدم">
+                    إعادة تصفير
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Container -->
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 py-6">
+        
+        <!-- Quick Instructions Banner -->
+        <div class="mb-6 bg-indigo-950/40 border border-indigo-500/30 rounded-2xl p-3.5 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs md:text-sm text-indigo-200">
+            <div class="flex items-center gap-2.5">
+                <span class="text-xl">💡</span>
+                <span><strong>طريقة البصمجة السريعة:</strong> احفظ <span class="text-amber-300 font-bold underline">مفتاح السؤال</span> على الوجه الأمامي، واضغط على الكارت عشان تشوف <span class="text-emerald-300 font-bold underline">الكلمات اللي بالخط العريض</span> على الظهر.. هي دي اللي هتاخد عليها الدرجة كاملة!</span>
+            </div>
+            <span class="text-xs bg-indigo-900/70 px-3 py-1 rounded-lg border border-indigo-700 shrink-0 text-indigo-300">
+                اختصار الكيبورد: المسافة (Space) لقلب الكارت | الأسهم للتنقل
+            </span>
+        </div>
+
+        <!-- Single Card Study Mode Container (Hidden by default) -->
+        <div id="singleModeContainer" class="hidden flex-col items-center justify-center max-w-2xl mx-auto my-4">
+            <div class="w-full flex items-center justify-between mb-3 px-2">
+                <span id="singleCardCounter" class="text-sm font-bold text-indigo-400 bg-indigo-950/80 border border-indigo-800 px-3 py-1 rounded-full">
+                    السؤال 1 من 11
+                </span>
+                <span class="text-xs text-slate-400">اضغط على البطاقة لقلبها</span>
+            </div>
+
+            <!-- Single Card Slot -->
+            <div id="singleCardSlot" class="w-full"></div>
+
+            <!-- Navigation Buttons for Single Mode -->
+            <div class="flex items-center justify-between w-full mt-6 gap-4">
+                <button onclick="prevCard()" class="flex-1 py-3 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 font-bold text-sm md:text-base flex items-center justify-center gap-2 transition active:scale-95">
+                    <span>➡️</span> السؤال السابق
+                </button>
+                <button onclick="flipCurrentSingleCard()" class="py-3 px-6 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-sm md:text-base shadow-lg shadow-indigo-600/30 transition active:scale-95">
+                    🔄 اقلب البطاقة
+                </button>
+                <button onclick="nextCard()" class="flex-1 py-3 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 font-bold text-sm md:text-base flex items-center justify-center gap-2 transition active:scale-95">
+                    السؤال التالي <span>⬅️</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Grid Mode Container -->
+        <div id="gridModeContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- Cards will be dynamically injected here -->
+        </div>
+
+        <!-- Empty State when all cards are learned in Filter mode -->
+        <div id="emptyState" class="hidden text-center py-16 bg-slate-900/50 rounded-3xl border border-slate-800 my-6">
+            <div class="text-5xl mb-3">🎉</div>
+            <h2 class="text-2xl font-bold text-emerald-400 mb-2">عاش يا بطل! خلصت وحفظت كل أسئلة المقالي!</h2>
+            <p class="text-slate-400 text-sm mb-6">تقدر دلوقتي تراجعهم كلهم تاني أو تدخل تفرم الـ MCQ والداتا بيز وأنت مطمن.</p>
+            <button onclick="toggleFilterUnlearned()" class="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl shadow-lg transition">
+                إظهار كل البطاقات مرة أخرى
+            </button>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-slate-900 border-t border-slate-800 py-4 text-center text-xs text-slate-500 mt-auto">
+        مصمم خصيصاً لإنقاذ ميدتيرم Biochemistry & Cell Biology - د. محمد رمضان العطماني | بالتوفيق يا بطل 💪
+    </footer>
+
+    <!-- Application Logic & Data -->
+    <script>
+        const flashcardsData = [
+            {
+                id: 1,
+                qNum: "Q1",
+                question: "Write on classification of carbohydrates and give an example for each type?",
+                keywordEn: "Classification of carbohydrates",
+                keywordAr: "تصنيف الكربوهيدرات وأمثلتها",
+                points: [
+                    "<strong>Monosaccharides</strong> (1 sugar unit): Simplest sugars, cannot be hydrolyzed.<br><span class='text-emerald-300 font-semibold'>Ex: Glucose, Fructose, Ribose.</span>",
+                    "<strong>Disaccharides</strong> (2 sugar units): Joined by glycosidic linkage.<br><span class='text-emerald-300 font-semibold'>Ex: Sucrose, Lactose, Maltose.</span>",
+                    "<strong>Polysaccharides</strong> (3+ sugar units): Insoluble polymers.<br><span class='text-emerald-300 font-semibold'>Ex: Starch, Glycogen, Cellulose.</span>"
+                ],
+                arHelper: "أحادية (جلوكوز/فركتوز) • ثنائية (سكروز/لاكتوز/مالتوز) • عديدة (نشا/جليكوجين/سليلوز)."
+            },
+            {
+                id: 2,
+                qNum: "Q2",
+                question: "Compare between Prokaryotic and Eukaryotic Cells?",
+                keywordEn: "Prokaryotic vs Eukaryotic",
+                keywordAr: "مقارنة: بدائيات النواة vs حقيقيات النواة",
+                points: [
+                    "<strong>Size & Complexity:</strong> Prokaryotes are smaller & simpler; Eukaryotes are larger & complex.",
+                    "<strong>Nucleus:</strong> Prokaryotes <span class='text-amber-300 font-semibold'>lack</span> nucleus; Eukaryotes have <span class='text-emerald-300 font-semibold'>true nucleus</span>.",
+                    "<strong>DNA:</strong> Prokaryotes have <span class='text-amber-300 font-semibold'>circular DNA</span> (no proteins); Eukaryotes have <span class='text-emerald-300 font-semibold'>linear DNA</span> (with histones).",
+                    "<strong>Multiplication:</strong> Prokaryotes faster (Binary Fission); Eukaryotes slower.",
+                    "<strong>Examples:</strong> Prokaryotes (Bacteria); Eukaryotes (Plants, Animals, Fungi)."
+                ],
+                arHelper: "البكتيريا (Pro) صغيرة وبدون نواة وDNA دائري • حقيقيات النواة (Euk) أكبر ولها نواة حقيقية وDNA خطي."
+            },
+            {
+                id: 3,
+                qNum: "Q3",
+                question: "Compare between Germ Cells and Somatic Cells?",
+                keywordEn: "Germ Cells vs Somatic Cells",
+                keywordAr: "مقارنة: الخلايا الجنسية vs الخلايا الجسدية",
+                points: [
+                    "<strong>Germ Cells (Gametes):</strong> Sex cells for reproduction.<br>• Chromosome set: <span class='text-emerald-300 font-semibold'>Haploid (N = 23 chromosomes)</span>.<br>• Ex: <strong>Sperm & Ovum</strong>.",
+                    "<strong>Somatic Cells:</strong> Body cells forming tissues/organs.<br>• Chromosome set: <span class='text-emerald-300 font-semibold'>Diploid (2N = 46 chromosomes / 23 pairs)</span>.<br>• Ex: <strong>Muscle, Neuron, Blood cells</strong>."
+                ],
+                arHelper: "الجنسية (الأمشاج: حيوان منوي وبويضة N=23) • الجسدية (خلايا الجسم: عضلات وأعصاب 2N=46)."
+            },
+            {
+                id: 4,
+                qNum: "Q4",
+                question: "Describe the structure and functions of Cell Nucleus, Cell Membrane, Mitochondria, and ER?",
+                keywordEn: "Nucleus, Membrane, Mitochondria, ER",
+                keywordAr: "تركيب ووظائف عضيات الخلية الأربعة",
+                points: [
+                    "<strong>1. Nucleus:</strong> Double membrane with pores & nucleolus (makes ribosomes); <span class='text-emerald-300'>stores DNA & controls cell</span>.",
+                    "<strong>2. Cell Membrane:</strong> <span class='text-emerald-300'>Phospholipid bilayer</span> (hydrophilic heads, hydrophobic tails) + proteins; protects & selective transport.",
+                    "<strong>3. Mitochondria:</strong> Double membrane with folded inner <span class='text-emerald-300'>cristae</span> & matrix; <span class='text-emerald-300'>generates ATP (Powerhouse)</span>.",
+                    "<strong>4. Endoplasmic Reticulum (ER):</strong> <span class='text-emerald-300'>Rough ER</span> (has ribosomes &rarr; <strong>Protein synthesis</strong>); <span class='text-emerald-300'>Smooth ER</span> (no ribosomes &rarr; <strong>Lipid synthesis</strong>)."
+                ],
+                arHelper: "النواة (DNA وتحكم) • الغشاء (طبقتين فوسفوليبيد ونقل) • الميتوكوندريا (طاقة ATP) • الشبكة (خشنة للبروتين وملساء للدهون)."
+            },
+            {
+                id: 5,
+                qNum: "Q5",
+                question: "Compare between Isotonic, Hypotonic, and Hypertonic Solutions?",
+                keywordEn: "Isotonic, Hypotonic, Hypertonic",
+                keywordAr: "مقارنة: أنواع المحاليل الثلاثة وتأثيرها",
+                points: [
+                    "<strong>Isotonic:</strong> Equal solute inside & outside &rarr; No net water movement &rarr; <span class='text-emerald-300 font-semibold'>Cell size unchanged</span>.",
+                    "<strong>Hypotonic:</strong> Lower solute outside (dilute) &rarr; Water enters (Endosmosis) &rarr; <span class='text-amber-300 font-semibold'>Cell swells & bursts</span> (Turgid in plants).",
+                    "<strong>Hypertonic:</strong> Higher solute outside (concentrated) &rarr; Water leaves (Exosmosis) &rarr; <span class='text-rose-300 font-semibold'>Cell shrinks</span> (Plasmolysis in plants)."
+                ],
+                arHelper: "Isotonic (متساوي: لا تتغير) • Hypo (مخفف بره: يدخل الماء وتنتفخ) • Hyper (مركز بره: يخرج الماء وتنكمش)."
+            },
+            {
+                id: 6,
+                qNum: "Q6",
+                question: "Write on Types of Porters (Transporters)?",
+                keywordEn: "Types of Porters (Transporters)",
+                keywordAr: "أنواع البروتينات الناقلة (البورترز)",
+                points: [
+                    "<strong>1. Uniporter:</strong> Transports <span class='text-emerald-300 font-semibold'>1 molecule</span> in one direction.",
+                    "<strong>2. Symporter:</strong> Transports <span class='text-emerald-300 font-semibold'>2 molecules in SAME direction</span> (e.g., Na+/Glucose).",
+                    "<strong>3. Antiporter:</strong> Transports <span class='text-emerald-300 font-semibold'>2 molecules in OPPOSITE directions</span> (e.g., Na+/Ca2+ exchanger)."
+                ],
+                arHelper: "Uni (جزيء واحد) • Sym (جزيئين في نفس الاتجاه) • Anti (جزيئين في عكس الاتجاه)."
+            },
+            {
+                id: 7,
+                qNum: "Q7",
+                question: "Write about the different types of Osmosis?",
+                keywordEn: "Types of Osmosis",
+                keywordAr: "أنواع الأسموزية (الداخلية والخارجية)",
+                points: [
+                    "<strong>1. Endosmosis:</strong> <span class='text-emerald-300 font-semibold'>Inward movement of water</span> into cell when placed in a <strong>hypotonic</strong> solution &rarr; <strong>Cell swells</strong>.",
+                    "<strong>2. Exosmosis:</strong> <span class='text-amber-300 font-semibold'>Outward movement of water</span> from cell when placed in a <strong>hypertonic</strong> solution &rarr; <strong>Cell shrinks</strong>."
+                ],
+                arHelper: "Endo (دخول الماء للخلية في المحلول المخفف فتنتفخ) • Exo (خروج الماء من الخلية في المحلول المركز فتنكمش)."
+            },
+            {
+                id: 8,
+                qNum: "Q8",
+                question: "What are the steps of Binary Fission?",
+                keywordEn: "Steps of Binary Fission",
+                keywordAr: "خطوات الانشطار الثنائي في البكتيريا",
+                points: [
+                    "<strong>Step 1:</strong> Parent bacterial cell <strong>elongates</strong>.",
+                    "<strong>Step 2:</strong> Circular <strong>DNA replicates</strong> into 2 identical copies.",
+                    "<strong>Step 3:</strong> Two DNA copies <strong>migrate to opposite poles</strong>.",
+                    "<strong>Step 4:</strong> Cell membrane & cell wall <strong>constrict inward</strong> at center.",
+                    "<strong>Step 5:</strong> Cross wall forms completely &rarr; <span class='text-emerald-300 font-semibold'>2 identical daughter cells</span>."
+                ],
+                arHelper: "1. تستطيل الخلية 2. يتضاعف الـDNA 3. ينفصل للقطبين 4. ينثني الجدار للداخل 5. تنقسم لخليتين متطابقتين."
+            },
+            {
+                id: 9,
+                qNum: "Q9",
+                question: "Explain the Sodium-Potassium Pump (Na+/K+ ATPase) mechanism in living cells?",
+                keywordEn: "Sodium-Potassium Pump (Na+/K+)",
+                keywordAr: "آلية عمل مضخة الصوديوم والبوتاسيوم",
+                points: [
+                    "<strong>1.</strong> Pump opens inside & binds <span class='text-emerald-300 font-semibold'>3 Na+ ions</span>.",
+                    "<strong>2.</strong> ATP hydrolyzes to ADP + Pi &rarr; Pump is <strong>phosphorylated</strong>.",
+                    "<strong>3.</strong> Pump changes shape, opens outside & <span class='text-emerald-300 font-semibold'>releases 3 Na+ out</span>.",
+                    "<strong>4.</strong> Pump binds <span class='text-amber-300 font-semibold'>2 K+ ions</span> from outside.",
+                    "<strong>5.</strong> Phosphate group is removed (<strong>Dephosphorylation</strong>).",
+                    "<strong>6.</strong> Pump opens inside & <span class='text-amber-300 font-semibold'>releases 2 K+ into cell</span>."
+                ],
+                arHelper: "السر في الرقمين: (3 صوديوم للخارج مع فسفرة بـ ATP) ثم (2 بوتاسيوم للداخل مع نزع الفوسفات)."
+            },
+            {
+                id: 10,
+                qNum: "Q10",
+                question: "Describe the types of Bulk Transport?",
+                keywordEn: "Types of Bulk Transport",
+                keywordAr: "أنواع النقل بالجملة (للجزيئات الكبيرة)",
+                points: [
+                    "<strong>1. Endocytosis</strong> (Inward uptake into cell via vesicles):<br>• <strong>Phagocytosis ('Cell Eating'):</strong> Engulfing large solid particles/bacteria.<br>• <strong>Pinocytosis ('Cell Drinking'):</strong> Uptake of fluids & dissolved solutes.",
+                    "<strong>2. Exocytosis</strong> (Outward release): Vesicles fuse with membrane to expel wastes/secretions outside cell."
+                ],
+                arHelper: "إدخال خلوي Endo (أكل خلوي Phago للمواد الصلبة، شرب خلوي Pino للسوائل) • إخراج خلوي Exo (طرد للخارج)."
+            },
+            {
+                id: 11,
+                qNum: "Q11",
+                question: "Discuss the Three Types of Passive Transport?",
+                keywordEn: "Three Types of Passive Transport",
+                keywordAr: "أنواع النقل السلبي الثلاثة (بدون طاقة)",
+                points: [
+                    "<span class='text-xs text-indigo-300 block mb-1'>* Moves High &rarr; Low concentration WITHOUT ATP:</span>",
+                    "<strong>1. Simple Diffusion:</strong> Direct movement of small uncharged molecules (<span class='text-emerald-300'>O2, CO2</span>) across lipid bilayer.",
+                    "<strong>2. Facilitated Diffusion:</strong> Movement of polar/larger molecules (<span class='text-emerald-300'>glucose, amino acids</span>) via <strong>Channel or Carrier proteins</strong>.",
+                    "<strong>3. Osmosis:</strong> Diffusion of <span class='text-emerald-300'>water molecules</span> from high to low water concentration across membrane."
+                ],
+                arHelper: "بدون طاقة ومن التركيز العالي للمنخفض: 1. انتشار بسيط (غازات) 2. انتشار ميسر (ببروتينات ناقلة) 3. أسموزية (حركة الماء)."
+            }
+        ];
+
+        // State Management
+        let learnedCards = JSON.parse(localStorage.getItem('bio_learned_cards') || '[]');
+        let flippedCards = {};
+        let viewMode = 'grid'; // 'grid' or 'single'
+        let currentSingleIndex = 0;
+        let filterUnlearned = false;
+        let allFlipped = false;
+
+        // Build HTML for a card
+        function createCardHTML(card, isSingleMode = false) {
+            const isLearned = learnedCards.includes(card.id);
+            const isFlipped = flippedCards[card.id] || false;
+            const heightClass = isSingleMode ? 'h-[430px] sm:h-[400px]' : 'h-[390px]';
+
+            return `
+            <div id="card-${card.id}" class="perspective-1000 w-full ${heightClass} select-none group ${isFlipped ? 'card-flipped' : ''}">
+                <div class="transform-style-3d relative w-full h-full duration-500 cursor-pointer" onclick="toggleFlip(${card.id})">
+                    
+                    <!-- FRONT OF CARD (QUESTION) -->
+                    <div class="backface-hidden absolute inset-0 w-full h-full rounded-2xl bg-gradient-to-b from-slate-800 to-slate-900 border-2 ${isLearned ? 'border-emerald-500/60' : 'border-slate-700 hover:border-indigo-500/70'} p-5 flex flex-col justify-between shadow-xl transition-all">
+                        
+                        <!-- Top Row: Badge & Learned Status -->
+                        <div class="flex items-center justify-between gap-2">
+                            <span class="px-3 py-1 rounded-lg bg-indigo-500/20 border border-indigo-500/40 text-indigo-300 font-extrabold text-sm en-text">
+                                ${card.qNum} • Essay
+                            </span>
+                            <button onclick="event.stopPropagation(); toggleLearned(${card.id})" class="px-2.5 py-1 rounded-lg text-xs font-bold border transition flex items-center gap-1 ${isLearned ? 'bg-emerald-500/20 border-emerald-500 text-emerald-300' : 'bg-slate-800 border-slate-600 text-slate-400 hover:text-white'}">
+                                <span>${isLearned ? '✓ تم الحفظ' : '○ تحديد كمحفوظ'}</span>
+                            </button>
+                        </div>
+
+                        <!-- Middle: English Question & Keyword Box -->
+                        <div class="my-auto py-2">
+                            <div class="text-xs text-slate-400 mb-1 font-semibold">السؤال في ورقة الامتحان:</div>
+                            <h3 class="en-text text-base md:text-lg font-extrabold text-white leading-snug bg-slate-950/60 p-3.5 rounded-xl border border-slate-800 shadow-inner">
+                                ${card.question}
+                            </h3>
+
+                            <!-- Keyword Key Box -->
+                            <div class="mt-3 bg-amber-500/10 border border-amber-500/30 rounded-xl p-2.5">
+                                <div class="text-[11px] text-amber-300/90 font-bold mb-0.5 flex items-center gap-1">
+                                    <span>🔑</span> مفتاح لقط السؤال فوراً:
+                                </div>
+                                <div class="text-xs md:text-sm font-bold text-amber-200 en-text">
+                                    ${card.keywordEn}
+                                </div>
+                                <div class="text-xs text-slate-300 mt-0.5">
+                                    (${card.keywordAr})
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Bottom: Flip Prompt -->
+                        <div class="pt-2 border-t border-slate-800/80 flex items-center justify-between text-xs text-indigo-300 font-semibold group-hover:text-indigo-200">
+                            <span class="flex items-center gap-1.5">
+                                <span class="inline-block animate-bounce">👆</span> اضغط على البطاقة لإظهار الإجابة المختصرة
+                            </span>
+                            <span class="text-slate-500">وجه السؤال</span>
+                        </div>
+                    </div>
+
+                    <!-- BACK OF CARD (ANSWER) -->
+                    <div class="backface-hidden rotate-y-180 absolute inset-0 w-full h-full rounded-2xl bg-gradient-to-b from-slate-900 via-indigo-950/40 to-slate-900 border-2 border-emerald-500/70 p-5 flex flex-col justify-between shadow-2xl overflow-hidden">
+                        
+                        <!-- Top Row Back -->
+                        <div class="flex items-center justify-between gap-2 pb-2 border-b border-slate-800 shrink-0">
+                            <div class="flex items-center gap-2">
+                                <span class="px-2.5 py-0.5 rounded-md bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 font-extrabold text-xs en-text">
+                                    ${card.qNum} Answer
+                                </span>
+                                <span class="text-xs text-slate-300 font-bold truncate max-w-[160px]">${card.keywordAr}</span>
+                            </div>
+                            <button onclick="event.stopPropagation(); toggleLearned(${card.id})" class="px-2.5 py-1 rounded-lg text-xs font-bold border transition shrink-0 ${isLearned ? 'bg-emerald-600 border-emerald-400 text-white shadow-md shadow-emerald-600/30' : 'bg-slate-800 border-slate-600 text-slate-300 hover:border-emerald-400'}">
+                                ${isLearned ? '✓ محفوظة' : '+ احفظها'}
+                            </button>
+                        </div>
+
+                        <!-- Answer Bullet Points (Scrollable if needed) -->
+                        <div class="my-auto py-2 overflow-y-auto max-h-[245px] pr-1">
+                            <ul class="en-text space-y-2 text-xs md:text-[13.5px] text-slate-100 leading-relaxed">
+                                ${card.points.map(pt => `
+                                    <li class="bg-slate-950/75 p-2 rounded-lg border border-slate-800/90 shadow-sm">
+                                        ${pt}
+                                    </li>
+                                `).join('')}
+                            </ul>
+                        </div>
+
+                        <!-- Arabic Quick Summary & Return Prompt -->
+                        <div class="pt-2 border-t border-slate-800/90 shrink-0">
+                            <div class="bg-emerald-950/50 border border-emerald-700/40 rounded-lg px-2.5 py-1.5 mb-1.5 text-[11px] text-emerald-200 leading-tight">
+                                <strong>الخلاصة بالعربي:</strong> ${card.arHelper}
+                            </div>
+                            <div class="flex items-center justify-between text-[11px] text-slate-400">
+                                <span>👆 اضغط للرجوع للسؤال</span>
+                                <span class="text-emerald-400 font-bold">إجابة الدرجة الكاملة ✓</span>
+                            </div>
+                        </div>
+
+                    </div>
+
+                </div>
+            </div>
+            `;
+        }
+
+        // Render Cards
+        function renderApp() {
+            const gridContainer = document.getElementById('gridModeContainer');
+            const singleContainer = document.getElementById('singleModeContainer');
+            const emptyState = document.getElementById('emptyState');
+
+            // Update Progress Bar
+            const learnedCount = learnedCards.length;
+            const totalCount = flashcardsData.length;
+            const pct = Math.round((learnedCount / totalCount) * 100);
+            document.getElementById('progressCount').textContent = `${learnedCount} / ${totalCount}`;
+            document.getElementById('progressBar').style.width = `${pct}%`;
+
+            // Filter cards if filterUnlearned is active
+            const visibleCards = filterUnlearned 
+                ? flashcardsData.filter(c => !learnedCards.includes(c.id))
+                : flashcardsData;
+
+            if (visibleCards.length === 0) {
+                gridContainer.classList.add('hidden');
+                singleContainer.classList.add('hidden');
+                emptyState.classList.remove('hidden');
+                return;
+            } else {
+                emptyState.classList.add('hidden');
+            }
+
+            if (viewMode === 'grid') {
+                gridContainer.classList.remove('hidden');
+                singleContainer.classList.add('hidden');
+                gridContainer.innerHTML = visibleCards.map(card => createCardHTML(card, false)).join('');
+            } else {
+                gridContainer.classList.add('hidden');
+                singleContainer.classList.remove('hidden');
+                singleContainer.classList.add('flex');
+
+                if (currentSingleIndex >= visibleCards.length) {
+                    currentSingleIndex = 0;
+                }
+                const currentCard = visibleCards[currentSingleIndex];
+                document.getElementById('singleCardCounter').textContent = `بطاقة ${currentSingleIndex + 1} من ${visibleCards.length}`;
+                document.getElementById('singleCardSlot').innerHTML = createCardHTML(currentCard, true);
+            }
+        }
+
+        // Flip Individual Card
+        function toggleFlip(cardId) {
+            flippedCards[cardId] = !flippedCards[cardId];
+            const cardEl = document.getElementById(`card-${cardId}`);
+            if (cardEl) {
+                cardEl.classList.toggle('card-flipped', flippedCards[cardId]);
+            }
+        }
+
+        // Flip All Cards
+        function flipAllCards() {
+            allFlipped = !allFlipped;
+            flashcardsData.forEach(c => {
+                flippedCards[c.id] = allFlipped;
+            });
+            document.getElementById('flipAllText').textContent = allFlipped ? 'إرجاع الكل للسؤال' : 'قلب الكل للإجابة';
+            renderApp();
+        }
+
+        // Toggle Learned State
+        function toggleLearned(cardId) {
+            if (learnedCards.includes(cardId)) {
+                learnedCards = learnedCards.filter(id => id !== cardId);
+            } else {
+                learnedCards.push(cardId);
+            }
+            localStorage.setItem('bio_learned_cards', JSON.stringify(learnedCards));
+            renderApp();
+        }
+
+        // Toggle Unlearned Filter
+        function toggleFilterUnlearned() {
+            filterUnlearned = !filterUnlearned;
+            const btn = document.getElementById('btnFilterUnlearned');
+            const txt = document.getElementById('filterText');
+            if (filterUnlearned) {
+                btn.classList.replace('bg-slate-800', 'bg-amber-600');
+                btn.classList.replace('text-amber-300', 'text-white');
+                txt.textContent = 'إظهار كل الكروت (11)';
+            } else {
+                btn.classList.replace('bg-amber-600', 'bg-slate-800');
+                btn.classList.replace('text-white', 'text-amber-300');
+                txt.textContent = 'عرض غير المحفوظ فقط';
+            }
+            currentSingleIndex = 0;
+            renderApp();
+        }
+
+        // Switch between Grid and Single Mode
+        function setViewMode(mode) {
+            viewMode = mode;
+            const btnGrid = document.getElementById('btnGridMode');
+            const btnSingle = document.getElementById('btnSingleMode');
+
+            if (mode === 'grid') {
+                btnGrid.className = "px-3 py-1.5 rounded-lg text-xs md:text-sm font-bold transition-all bg-indigo-600 text-white shadow";
+                btnSingle.className = "px-3 py-1.5 rounded-lg text-xs md:text-sm font-bold transition-all text-slate-300 hover:text-white";
+            } else {
+                btnSingle.className = "px-3 py-1.5 rounded-lg text-xs md:text-sm font-bold transition-all bg-indigo-600 text-white shadow";
+                btnGrid.className = "px-3 py-1.5 rounded-lg text-xs md:text-sm font-bold transition-all text-slate-300 hover:text-white";
+            }
+            renderApp();
+        }
+
+        // Single Mode Navigation
+        function getVisibleCards() {
+            return filterUnlearned 
+                ? flashcardsData.filter(c => !learnedCards.includes(c.id))
+                : flashcardsData;
+        }
+
+        function nextCard() {
+            const visible = getVisibleCards();
+            if (visible.length === 0) return;
+            currentSingleIndex = (currentSingleIndex + 1) % visible.length;
+            renderApp();
+        }
+
+        function prevCard() {
+            const visible = getVisibleCards();
+            if (visible.length === 0) return;
+            currentSingleIndex = (currentSingleIndex - 1 + visible.length) % visible.length;
+            renderApp();
+        }
+
+        function flipCurrentSingleCard() {
+            const visible = getVisibleCards();
+            if (visible.length === 0) return;
+            const currentCard = visible[currentSingleIndex];
+            toggleFlip(currentCard.id);
+        }
+
+        // Reset Progress
+        function resetProgress() {
+            learnedCards = [];
+            flippedCards = {};
+            allFlipped = false;
+            localStorage.removeItem('bio_learned_cards');
+            renderApp();
+        }
+
+        // Keyboard Shortcuts for fast studying
+        window.addEventListener('keydown', (e) => {
+            if (viewMode === 'single') {
+                if (e.code === 'Space') {
+                    e.preventDefault();
+                    flipCurrentSingleCard();
+                } else if (e.code === 'ArrowLeft') {
+                    nextCard();
+                } else if (e.code === 'ArrowRight') {
+                    prevCard();
+                }
+            }
+        });
+
+        // Initial Render
+        window.onload = renderApp;
+    </script>
+</body>
+</html>
